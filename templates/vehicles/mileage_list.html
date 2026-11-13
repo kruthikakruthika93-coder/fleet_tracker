@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Mileage{% endblock %}
+{% block content %}
+<h3 class="mb-3">Mileage readings</h3>
+
+<form method="get" class="mb-3 d-flex gap-2">
+    <select name="vehicle" class="form-select">
+        <option value="">All vehicles</option>
+        {% for v in vehicles %}
+        <option value="{{ v.pk }}" {% if selected == v.pk|stringformat:"s" %}selected{% endif %}>{{ v.registration_number }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+</form>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr><th>Date</th><th>Vehicle</th><th>Driver</th><th>Reading</th><th>Notes</th></tr></thead>
+            <tbody>
+            {% for m in logs %}
+                <tr>
+                    <td>{{ m.date|date:"d M Y" }}</td>
+                    <td>{{ m.vehicle.registration_number }}</td>
+                    <td>{{ m.driver|default:"-" }}</td>
+                    <td>{{ m.odometer_reading }} km</td>
+                    <td>{{ m.notes }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No readings found.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% load static %}
+<div class="card mb-3" id="share-card" data-update-url="{% url 'location_update' %}" data-stop-url="{% url 'location_stop' %}" data-csrf="{{ csrf_token }}">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-geo-alt me-1"></i>Location sharing</span>
+        <span class="badge text-bg-secondary" id="share-status">Not sharing</span>
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">Your location is shared with the company admin only, and only while this page is open and sharing is turned on. Closing the page stops updates. You can stop sharing at any time.</p>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <button type="button" class="btn btn-primary" id="share-start"><i class="bi bi-play-fill me-1"></i>Start sharing</button>
+            <button type="button" class="btn btn-outline-danger d-none" id="share-stop"><i class="bi bi-stop-fill me-1"></i>Stop sharing</button>
+            <span class="small text-muted" id="share-detail"></span>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/location_share.js' %}"></script>

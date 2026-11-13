@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Assignments{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">Driver assignments</h3>
+    <a href="{% url 'assignment_create' %}" class="btn btn-primary">Assign driver</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">Current</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr><th>Vehicle</th><th>Driver</th><th>Since</th><th></th></tr></thead>
+            <tbody>
+            {% for a in active %}
+                <tr>
+                    <td><a href="{% url 'vehicle_detail' a.vehicle.pk %}" class="text-decoration-none">{{ a.vehicle.registration_number }}</a></td>
+                    <td>{{ a.driver }}</td>
+                    <td>{{ a.start_date|date:"d M Y" }}</td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'assignment_end' a.pk %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">End</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-3">No active assignments.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">History</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr><th>Vehicle</th><th>Driver</th><th>From</th><th>To</th></tr></thead>
+            <tbody>
+            {% for a in past %}
+                <tr>
+                    <td>{{ a.vehicle.registration_number }}</td>
+                    <td>{{ a.driver }}</td>
+                    <td>{{ a.start_date|date:"d M Y" }}</td>
+                    <td>{{ a.end_date|date:"d M Y" }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-3">No past assignments.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

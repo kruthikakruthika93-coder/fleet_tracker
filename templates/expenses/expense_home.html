@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Expenses{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">Expenses</h3>
+    <div class="d-flex gap-2">
+        <a href="{% url 'repair_create' %}" class="btn btn-outline-primary">Add repair</a>
+        <a href="{% url 'fuel_create' %}" class="btn btn-primary">Add fuel</a>
+    </div>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <select name="vehicle" class="form-select">
+            <option value="">All vehicles</option>
+            {% for v in vehicles %}
+            <option value="{{ v.pk }}" {% if selected == v.pk|stringformat:"s" %}selected{% endif %}>{{ v.registration_number }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-6 col-md-3"><input type="date" name="start" value="{{ start_str }}" class="form-control"></div>
+    <div class="col-6 col-md-3"><input type="date" name="end" value="{{ end_str }}" class="form-control"></div>
+    <div class="col-md-2"><button type="submit" class="btn btn-outline-secondary w-100">Filter</button></div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col-4"><div class="card"><div class="card-body">
+        <div class="text-muted small">Fuel</div><div class="fs-5">₹{{ fuel_total }}</div>
+    </div></div></div>
+    <div class="col-4"><div class="card"><div class="card-body">
+        <div class="text-muted small">Repairs</div><div class="fs-5">₹{{ repair_total }}</div>
+    </div></div></div>
+    <div class="col-4"><div class="card border-primary"><div class="card-body">
+        <div class="text-muted small">Total</div><div class="fs-5">₹{{ grand_total }}</div>
+    </div></div></div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">Fuel</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr><th>Date</th><th>Vehicle</th><th>Driver</th><th>Litres</th><th>Cost</th><th>Per litre</th><th></th></tr></thead>
+            <tbody>
+            {% for f in fuel %}
+                <tr>
+                    <td>{{ f.date|date:"d M Y" }}</td>
+                    <td>{{ f.vehicle.registration_number }}</td>
+                    <td>{{ f.driver|default:"-" }}</td>
+                    <td>{{ f.litres }}</td>
+                    <td>₹{{ f.total_cost }}</td>
+                    <td>₹{{ f.price_per_litre }}</td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'fuel_delete' f.pk %}" class="m-0" onsubmit="return confirm('Delete this entry?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-3">No fuel entries.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Repairs</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr><th>Date</th><th>Vehicle</th><th>Description</th><th>Workshop</th><th>Cost</th><th></th></tr></thead>
+            <tbody>
+            {% for r in repairs %}
+                <tr>
+                    <td>{{ r.date|date:"d M Y" }}</td>
+                    <td>{{ r.vehicle.registration_number }}</td>
+                    <td>{{ r.description }}</td>
+                    <td>{{ r.workshop }}</td>
+                    <td>₹{{ r.cost }}</td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'repair_delete' r.pk %}" class="m-0" onsubmit="return confirm('Delete this entry?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-3">No repair expenses.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

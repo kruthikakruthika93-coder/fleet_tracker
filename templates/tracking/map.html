@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Driver GPS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h3 class="m-0">Driver GPS locations</h3>
+        <div class="text-muted small">Only drivers who turned on location sharing appear here. Refreshes every 10 seconds.</div>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge text-bg-success">Active</span>
+        <span class="badge text-bg-warning">Outdated</span>
+        <span class="badge text-bg-secondary">Offline</span>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<div class="card mb-4">
+    <div class="card-body p-0">
+        <div id="map" data-url="{% url 'tracking_data' %}" style="height: 460px; isolation: isolate;"></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Last known locations</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead><tr><th>Driver</th><th>Vehicle</th><th>Latitude</th><th>Longitude</th><th>Last updated</th><th>Status</th></tr></thead>
+            <tbody id="loc-rows"><tr><td colspan="6" class="text-center text-muted py-4">Loading...</td></tr></tbody>
+        </table>
+    </div>
+</div>
+<p class="text-muted small mt-2"><b>Active</b>: updated within 2 minutes. <b>Outdated</b>: sharing is on but no recent update (page closed or signal lost). <b>Offline</b>: the driver stopped sharing.</p>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/tracking_map.js' %}"></script>
+{% endblock %}

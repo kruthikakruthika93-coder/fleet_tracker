@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Drivers{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">Drivers</h3>
+    <a href="{% url 'driver_create' %}" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i>Add driver</a>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead><tr><th>Driver</th><th>Phone</th><th>Licence no.</th><th>Licence expiry</th><th>Vehicle</th><th></th></tr></thead>
+            <tbody>
+            {% for r in rows %}
+                <tr>
+                    <td>{{ r.d }}<div class="small text-muted">@{{ r.d.user.username }}</div></td>
+                    <td>{{ r.d.phone }}</td>
+                    <td>{{ r.d.license_number }}</td>
+                    <td>
+                        {{ r.d.license_expiry|date:"d M Y" }}
+                        {% if r.days < 0 %}<span class="badge text-bg-danger">Expired</span>
+                        {% elif r.days <= 30 %}<span class="badge text-bg-warning">{{ r.days }} days left</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if r.vehicle %}
+                        <a href="{% url 'vehicle_detail' r.vehicle.pk %}" class="text-decoration-none">{{ r.vehicle.registration_number }}</a>
+                        {% else %}<span class="text-muted">Unassigned</span>{% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'driver_update' r.d.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <form method="post" action="{% url 'driver_delete' r.d.pk %}" class="d-inline" onsubmit="return confirm('Delete this driver and their login?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No drivers yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

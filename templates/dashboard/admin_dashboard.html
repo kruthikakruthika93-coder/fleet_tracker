@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Admin dashboard{% endblock %}
+{% block content %}
+<div class="hero">
+    <h3>Welcome back, {{ user.first_name|default:user.username }}</h3>
+    <p>Here is what is happening with your fleet today.</p>
+    <div class="d-flex flex-wrap gap-2 mt-3">
+        <a href="{% url 'vehicle_create' %}" class="btn btn-light btn-sm"><i class="bi bi-plus-lg me-1"></i>Add vehicle</a>
+        <a href="{% url 'driver_create' %}" class="btn btn-light btn-sm"><i class="bi bi-person-plus me-1"></i>Add driver</a>
+        <a href="{% url 'assignment_create' %}" class="btn btn-light btn-sm"><i class="bi bi-link-45deg me-1"></i>Assign driver</a>
+        <a href="{% url 'fuel_create' %}" class="btn btn-light btn-sm"><i class="bi bi-fuel-pump me-1"></i>Add fuel</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><a href="{% url 'vehicle_list' %}" class="stat-card grad-indigo">
+        <div class="stat-label">Vehicles</div><div class="stat-value">{{ vehicle_count }}</div>
+        <div class="stat-note">{{ active_count }} active</div>
+        <i class="bi bi-truck-front stat-bg-icon"></i>
+    </a></div>
+    <div class="col-6 col-xl-3"><a href="{% url 'driver_list' %}" class="stat-card grad-emerald">
+        <div class="stat-label">Drivers</div><div class="stat-value">{{ driver_count }}</div>
+        <div class="stat-note">registered</div>
+        <i class="bi bi-people stat-bg-icon"></i>
+    </a></div>
+    <div class="col-6 col-xl-3"><a href="{% url 'alert_list' %}" class="stat-card grad-rose">
+        <div class="stat-label">New alerts</div><div class="stat-value">{{ unread_count }}</div>
+        <div class="stat-note">need attention</div>
+        <i class="bi bi-bell stat-bg-icon"></i>
+    </a></div>
+    <div class="col-6 col-xl-3"><a href="{% url 'maintenance_home' %}" class="stat-card grad-amber">
+        <div class="stat-label">Needs your action</div><div class="stat-value">{{ pending_count|add:issue_count }}</div>
+        <div class="stat-note">{{ pending_count }} approvals, {{ issue_count }} issues</div>
+        <i class="bi bi-clipboard-check stat-bg-icon"></i>
+    </a></div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">Expenses, last 6 months</div>
+            <div class="card-body"><div style="position: relative; height: 290px;"><canvas id="expenseChart"></canvas></div></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">Fleet status</div>
+            <div style="position: relative; height: 290px;"><canvas id="statusChart" data-active="{{ active_count }}" data-service="{{ service_count }}" data-inactive="{{ inactive_count }}"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Latest alerts</span>
+        <a href="{% url 'alert_list' %}" class="btn btn-sm btn-outline-primary">View all</a>
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for a in alerts %}
+        <li class="list-group-item d-flex align-items-center gap-3">
+            <span class="alert-icon {{ a.level }}"><i class="bi {% if a.alert_type == 'INSURANCE' %}bi-shield-exclamation{% elif a.alert_type == 'LICENSE' %}bi-person-vcard{% else %}bi-tools{% endif %}"></i></span>
+            <span class="flex-grow-1">{{ a.message }}</span>
+            <span class="badge text-bg-{{ a.level }}">{% if a.level == 'danger' %}Urgent{% else %}Soon{% endif %}</span>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted py-4 text-center"><i class="bi bi-check2-circle me-1"></i>Everything is on track. No new alerts.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{{ chart_data|json_script:"chart-data" }}
+<script>
+    const d = JSON.parse(document.getElementById('chart-data').textContent);
+    Chart.defaults.font.family = "'Poppins', sans-serif";
+
+    new Chart(document.getElementById('expenseChart'), {
+        type: 'bar',
+        data: {
+            labels: d.labels,
+            datasets: [
+                { label: 'Fuel', data: d.fuel, backgroundColor: '#6366f1', borderRadius: 8 },
+                { label: 'Repairs', data: d.repair, backgroundColor: '#f97316', borderRadius: 8 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true } },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    const sc = document.getElementById('statusChart');
+    new Chart(sc, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'In service', 'Inactive'],
+            datasets: [{
+                data: [Number(sc.dataset.active), Number(sc.dataset.service), Number(sc.dataset.inactive)],
+                backgroundColor: ['#10b981', '#f59e0b', '#94a3b8'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+</script>
+{% endblock %}

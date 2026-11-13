@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Driver dashboard{% endblock %}
+{% block content %}
+<div class="hero">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <h3>Hello, {{ user.first_name|default:user.username }}</h3>
+            <p>Drive safe. Log your mileage and fuel here.</p>
+        </div>
+        <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#welcomeModal">
+            <i class="bi bi-bell me-1"></i>Notifications
+            {% if notices %}<span class="badge text-bg-danger ms-1">{{ notices|length }}</span>{% endif %}
+        </button>
+    </div>
+</div>
+
+{% for a in alerts %}
+<div class="alert alert-{{ a.level }} d-flex align-items-center gap-2 py-2"><i class="bi bi-exclamation-triangle-fill"></i>{{ a.message }}</div>
+{% endfor %}
+
+{% if vehicle %}
+{% include 'tracking/_share_card.html' %}
+
+<div class="stat-card grad-indigo mb-3">
+    <div class="stat-label">Your vehicle</div>
+    <div class="stat-value">{{ vehicle.registration_number }}</div>
+    <div class="stat-note">{{ vehicle.make }} {{ vehicle.model }}, last reading {{ vehicle.current_odometer }} km</div>
+    <i class="bi bi-truck-front stat-bg-icon"></i>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a href="{% url 'driver_fuel' %}" class="btn btn-outline-primary"><i class="bi bi-fuel-pump me-1"></i>Add fuel</a>
+    <a href="{% url 'driver_service' %}" class="btn btn-outline-primary"><i class="bi bi-tools me-1"></i>Submit completed service</a>
+    <a href="{% url 'driver_issue' %}" class="btn btn-outline-danger"><i class="bi bi-exclamation-octagon me-1"></i>Report an issue</a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">Log mileage</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Save reading</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Your recent readings</div>
+    <div class="table-responsive">
+        <table class="table m-0">
+            <thead><tr><th>Date</th><th>Reading</th></tr></thead>
+            <tbody>
+            {% for m in logs %}
+                <tr><td>{{ m.date|date:"d M Y" }}</td><td>{{ m.odometer_reading }} km</td></tr>
+            {% empty %}
+                <tr><td colspan="2" class="text-center text-muted py-3">No readings yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">No vehicle is assigned to you yet. Please contact the company admin.</div>
+{% endif %}
+
+<div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeTitle" aria-hidden="true" data-auto-open="{% if show_welcome %}1{% else %}0{% endif %}">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header border-0 text-white" style="background: linear-gradient(120deg, #4338ca 0%, #7c3aed 50%, #ec4899 100%);">
+                <div>
+                    <h5 class="modal-title fw-bold" id="welcomeTitle">Welcome to FleetTracker</h5>
+                    <div class="small opacity-75">Hello, {{ user.first_name|default:user.username }}. Here is what needs your attention.</div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if vehicle %}
+                <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded-3 bg-primary-subtle">
+                    <i class="bi bi-truck-front fs-4 text-primary"></i>
+                    <div>
+                        <div class="small text-muted">Your vehicle</div>
+                        <div class="fw-semibold">{{ vehicle.registration_number }}, {{ vehicle.make }} {{ vehicle.model }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                {% for n in notices %}
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <span class="alert-icon bg-{{ n.level }}-subtle text-{{ n.level }}"><i class="bi {{ n.icon }}"></i></span>
+                    <div>
+                        <div class="fw-semibold">{{ n.title }}</div>
+                        <div class="text-muted small">{{ n.text }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-check2-circle fs-1 text-success d-block"></i>
+                    You are all set. No notifications right now.
+                </div>
+                {% endfor %}
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const welcome = document.getElementById('welcomeModal');
+    if (welcome && welcome.dataset.autoOpen === '1') {
+        bootstrap.Modal.getOrCreateInstance(welcome).show();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}{{ vehicle.registration_number }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h3 class="m-0">{{ vehicle.registration_number }}</h3>
+        <div class="text-muted">{{ vehicle.make }} {{ vehicle.model }}, {{ vehicle.year }}, {{ vehicle.get_fuel_type_display }}</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'vehicle_update' vehicle.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
+        <a href="{% url 'vehicle_list' %}" class="btn btn-outline-secondary btn-sm">Back</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-body">
+            <h6 class="text-muted">Vehicle details</h6>
+            <table class="table table-sm table-borderless m-0">
+                <tr><td class="text-muted">Status</td><td>{{ vehicle.get_status_display }}</td></tr>
+                <tr><td class="text-muted">Odometer</td><td>{{ vehicle.current_odometer }} km</td></tr>
+                <tr><td class="text-muted">Current driver</td>
+                    <td>
+                        {% if current_assignment %}
+                            {{ current_assignment.driver }}
+                        {% else %}
+                            <span class="text-muted">Not assigned</span>
+                        {% endif %}
+                    </td></tr>
+            </table>
+        </div></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-body">
+            <h6 class="text-muted">Insurance</h6>
+            <table class="table table-sm table-borderless m-0">
+                <tr><td class="text-muted">Provider</td><td>{{ vehicle.insurance_provider }}</td></tr>
+                <tr><td class="text-muted">Policy no.</td><td>{{ vehicle.insurance_policy_number }}</td></tr>
+                <tr><td class="text-muted">Expires</td>
+                    <td>
+                        {{ vehicle.insurance_expiry|date:"d M Y" }}
+                        {% if days_to_expiry < 0 %}
+                            <span class="badge text-bg-danger">Expired</span>
+                        {% elif days_to_expiry <= 30 %}
+                            <span class="badge text-bg-warning">{{ days_to_expiry }} days left</span>
+                        {% else %}
+                            <span class="badge text-bg-success">Valid</span>
+                        {% endif %}
+                    </td></tr>
+            </table>
+        </div></div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3"><div class="card"><div class="card-body">
+        <div class="text-muted small">Fuel</div><div class="fs-5">₹{{ fuel_total }}</div>
+    </div></div></div>
+    <div class="col-6 col-md-3"><div class="card"><div class="card-body">
+        <div class="text-muted small">Repairs</div><div class="fs-5">₹{{ repair_total }}</div>
+    </div></div></div>
+    <div class="col-6 col-md-3"><div class="card"><div class="card-body">
+        <div class="text-muted small">Services</div><div class="fs-5">₹{{ service_total }}</div>
+    </div></div></div>
+    <div class="col-6 col-md-3"><div class="card border-primary"><div class="card-body">
+        <div class="text-muted small">Total</div><div class="fs-5">₹{{ grand_total }}</div>
+    </div></div></div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">Maintenance schedule</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr><th>Service</th><th>Next due (km)</th><th>Next due (date)</th></tr></thead>
+            <tbody>
+            {% for s in schedules %}
+                <tr>
+                    <td>{{ s.get_service_type_display }}</td>
+                    <td>{{ s.next_due_km|default:"-" }}</td>
+                    <td>{{ s.next_due_date|date:"d M Y"|default:"-" }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="3" class="text-center text-muted py-3">No schedules set.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">Service history</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr><th>Date</th><th>Odometer</th><th>Workshop</th><th>Cost</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for r in records %}
+                <tr>
+                    <td>{{ r.service_date|date:"d M Y" }}</td>
+                    <td>{{ r.odometer }} km</td>
+                    <td>{{ r.workshop }}</td>
+                    <td>₹{{ r.cost }}</td>
+                    <td>{{ r.get_status_display }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-3">No service records yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Recent mileage readings</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr><th>Date</th><th>Reading</th><th>Driver</th></tr></thead>
+            <tbody>
+            {% for m in mileage_logs %}
+                <tr>
+                    <td>{{ m.date|date:"d M Y" }}</td>
+                    <td>{{ m.odometer_reading }} km</td>
+                    <td>{{ m.driver|default:"-" }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="3" class="text-center text-muted py-3">No readings yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

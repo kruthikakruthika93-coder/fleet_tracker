@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Maintenance{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">Maintenance</h3>
+    <div class="d-flex gap-2">
+        <a href="{% url 'record_create' %}" class="btn btn-outline-primary">Add service record</a>
+        <a href="{% url 'schedule_create' %}" class="btn btn-primary">Add schedule</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">Schedules</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr>
+                <th>Vehicle</th><th>Service</th><th>Due (km)</th><th>Due (date)</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody>
+            {% for r in rows %}
+                <tr>
+                    <td><a href="{% url 'vehicle_detail' r.s.vehicle.pk %}" class="text-decoration-none">{{ r.s.vehicle.registration_number }}</a></td>
+                    <td>{{ r.s.get_service_type_display }}</td>
+                    <td>{% if r.s.next_due_km %}{{ r.s.next_due_km }} ({{ r.km_left }} left){% else %}-{% endif %}</td>
+                    <td>{% if r.s.next_due_date %}{{ r.s.next_due_date|date:"d M Y" }}{% else %}-{% endif %}</td>
+                    <td>
+                        {% if r.overdue %}<span class="badge text-bg-danger">Overdue</span>
+                        {% elif r.soon %}<span class="badge text-bg-warning">Due soon</span>
+                        {% else %}<span class="badge text-bg-success">OK</span>{% endif %}
+                    </td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'schedule_delete' r.s.pk %}" class="m-0" onsubmit="return confirm('Delete this schedule?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-3">No schedules yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">Services waiting for approval</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr>
+                <th>Vehicle</th><th>Date</th><th>Odometer</th><th>Workshop</th><th>Cost</th><th></th>
+            </tr></thead>
+            <tbody>
+            {% for p in pending %}
+                <tr>
+                    <td>{{ p.vehicle.registration_number }}</td>
+                    <td>{{ p.service_date|date:"d M Y" }}</td>
+                    <td>{{ p.odometer }} km</td>
+                    <td>{{ p.workshop }}</td>
+                    <td>₹{{ p.cost }}</td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'record_approve' p.pk %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-3">Nothing waiting.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">Open issues</div>
+    <div class="table-responsive">
+        <table class="table m-0 align-middle">
+            <thead class="table-light"><tr>
+                <th>Vehicle</th><th>Reported by</th><th>Issue</th><th>When</th><th></th>
+            </tr></thead>
+            <tbody>
+            {% for i in issues %}
+                <tr>
+                    <td>{{ i.vehicle.registration_number }}</td>
+                    <td>{{ i.driver|default:"-" }}</td>
+                    <td>{{ i.description }}</td>
+                    <td>{{ i.created_at|date:"d M, H:i" }}</td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'issue_resolve' i.pk %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-success">Resolve</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-3">No open issues.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Recent approved services</div>
+    <div class="table-responsive">
+        <table class="table m-0">
+            <thead class="table-light"><tr><th>Vehicle</th><th>Date</th><th>Odometer</th><th>Workshop</th><th>Cost</th></tr></thead>
+            <tbody>
+            {% for r in recent %}
+                <tr>
+                    <td>{{ r.vehicle.registration_number }}</td>
+                    <td>{{ r.service_date|date:"d M Y" }}</td>
+                    <td>{{ r.odometer }} km</td>
+                    <td>{{ r.workshop }}</td>
+                    <td>₹{{ r.cost }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-3">No services yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
